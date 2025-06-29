@@ -1,4 +1,4 @@
-package com.plcoding.bookpedia.core.presentation
+package com.hbazai.bookpedia.core.presentation
 
 import androidx.compose.ui.graphics.Color
 

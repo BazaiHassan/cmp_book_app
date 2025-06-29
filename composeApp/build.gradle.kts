@@ -51,7 +51,7 @@ kotlin {
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -87,7 +87,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.plcoding.bookpedia"
+    namespace = "com.hbazai.bookpedia"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
