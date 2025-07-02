@@ -1,6 +1,7 @@
 package com.hbazai.bookpedia.book.presentation.book_list
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +10,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -17,17 +23,22 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cmp_bookpedia.composeapp.generated.resources.Res
 import cmp_bookpedia.composeapp.generated.resources.favorites
+import cmp_bookpedia.composeapp.generated.resources.no_favorite_books
+import cmp_bookpedia.composeapp.generated.resources.no_search_result
 import cmp_bookpedia.composeapp.generated.resources.search_results
 import com.hbazai.bookpedia.book.domain.Book
+import com.hbazai.bookpedia.book.presentation.book_list.components.BookList
 import com.hbazai.bookpedia.book.presentation.book_list.components.BookSearchBar
 import com.hbazai.bookpedia.core.presentation.DarkBlue
 import com.hbazai.bookpedia.core.presentation.DesertWhite
@@ -57,6 +68,22 @@ fun BookListScreenRoot(
 @Composable
 private fun BookListScreen(state: BookListState, onAction: (BookListAction) -> Unit) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val pagerState = rememberPagerState { 2 }
+    val searchBookListState = rememberLazyListState()
+    val favoriteBookListState = rememberLazyListState()
+
+    LaunchedEffect(state.searchResults) {
+        searchBookListState.animateScrollToItem(0)
+    }
+
+    LaunchedEffect(state.selectedTabIndex){
+        pagerState.animateScrollToPage(state.selectedTabIndex)
+    }
+
+    LaunchedEffect(pagerState.currentPage){
+        onAction(BookListAction.OnTabSelected(pagerState.currentPage))
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -93,7 +120,7 @@ private fun BookListScreen(state: BookListState, onAction: (BookListAction) -> U
                         .widthIn(max = 700.dp)
                         .fillMaxWidth(),
                     containerColor = DesertWhite,
-                    indicator = {tabPositions->
+                    indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
                             color = SandYellow,
                             modifier = Modifier.tabIndicatorOffset(tabPositions[state.selectedTabIndex])
@@ -134,6 +161,73 @@ private fun BookListScreen(state: BookListState, onAction: (BookListAction) -> U
                 Spacer(modifier = Modifier.height(4.dp))
 
                 /* Horizontal Pager */
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth().weight(1f)
+                ) { pageIndex ->
+                    Box(
+                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                    ) {
+                        when (pageIndex) {
+                            0 -> {
+                                if (state.isLoading) {
+                                    CircularProgressIndicator()
+                                } else {
+                                    when {
+                                        state.errorMessage != null -> {
+                                            Text(
+                                                text = state.errorMessage.asString(),
+                                                textAlign = TextAlign.Center,
+                                                style = MaterialTheme.typography.headlineSmall,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+
+                                        state.searchResults.isEmpty() -> {
+                                            Text(
+                                                text = stringResource(Res.string.no_search_result),
+                                                textAlign = TextAlign.Center,
+                                                style = MaterialTheme.typography.headlineSmall,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+
+                                        else -> {
+                                            BookList(
+                                                books = state.searchResults,
+                                                onClickBook = {
+                                                    onAction(BookListAction.OnBookClick(it))
+                                                },
+                                                modifier = Modifier.fillMaxSize(),
+                                                scrollState = searchBookListState
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            1 -> {
+                                if (state.favoriteBooks.isEmpty()) {
+                                    Text(
+                                        text = stringResource(Res.string.no_favorite_books),
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.headlineSmall,
+                                    )
+                                } else {
+                                    BookList(
+                                        books = state.favoriteBooks,
+                                        onClickBook = {
+                                            onAction(BookListAction.OnBookClick(it))
+                                        },
+                                        modifier = Modifier.fillMaxSize(),
+                                        scrollState = favoriteBookListState
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                }
 
             }
         }

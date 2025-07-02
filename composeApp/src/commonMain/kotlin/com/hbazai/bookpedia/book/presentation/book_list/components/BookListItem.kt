@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
@@ -59,7 +60,9 @@ fun BookListItem(
             modifier = modifier
                 .padding(16.dp)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min)
+                .height(IntrinsicSize.Min),
+            verticalAlignment = CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Box(
                 modifier = modifier.height(100.dp),
