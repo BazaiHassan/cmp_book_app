@@ -1,5 +1,6 @@
 package com.hbazai.bookpedia.book.data.network
 
+import com.hbazai.bookpedia.book.data.dto.SearchResponseDto
 import com.hbazai.bookpedia.book.domain.Book
 import com.hbazai.bookpedia.core.data.safeCall
 import com.hbazai.bookpedia.core.domain.DataError
@@ -12,23 +13,20 @@ private const val BASE_URL = "https://openlibrary.org"
 
 class KtorRemoteBookDataSource(
     private val httpClient: HttpClient
-) {
+):RemoteBookDataSource {
 
-    suspend fun searchBook(
+    override suspend fun searchBooks(
         query: String,
-        resultLimit: Int? = null
-    ): Result<List<Book>, DataError.Remote> {
-        return safeCall {
+        resultLimit: Int?
+    ): Result<SearchResponseDto, DataError.Remote> {
+        return safeCall<SearchResponseDto> {
             httpClient.get(
                 urlString = "$BASE_URL/search.json"
             ) {
                 parameter("q", query)
                 parameter("limit", resultLimit)
                 parameter("language", "eng")
-                parameter(
-                    "fields",
-                    "key,title,language,cover_i,author_key,author_name,cover_edition_key,first_publish_year,ratings_average,ratings_count,number_of_pages_median,edition_count"
-                )
+                parameter("fields", "key,title,author_name,author_key,cover_edition_key,cover_i,ratings_average,ratings_count,first_publish_year,language,number_of_pages_median,edition_count")
             }
         }
     }
